@@ -31,15 +31,18 @@ Features:
 """
 
 
-import urwid
-from urwid.wimp import SelectableIcon
+from .widget import WidgetWrap, Text
+from .wimp import SelectableIcon
+from .container import Columns
+from .decoration import Padding
+from .listbox import ListWalker, ListBox
 
 
 class TreeWidgetError(RuntimeError):
     pass
 
 
-class TreeWidget(urwid.WidgetWrap):
+class TreeWidget(WidgetWrap):
     """A widget representing something in a nested tree display."""
     indent_cols = 3
     unexpanded_icon = SelectableIcon('+', 0)
@@ -62,11 +65,11 @@ class TreeWidget(urwid.WidgetWrap):
     def get_indented_widget(self):
         widget = self.get_inner_widget()
         if not self.is_leaf:
-            widget = urwid.Columns([('fixed', 1,
+            widget = Columns([('fixed', 1,
                 [self.unexpanded_icon, self.expanded_icon][self.expanded]),
                 widget], dividechars=1)
         indent_cols = self.get_indent_cols()
-        return urwid.Padding(widget,
+        return Padding(widget,
             width=('relative', 100), left=indent_cols)
 
     def update_expanded_icon(self):
@@ -84,7 +87,7 @@ class TreeWidget(urwid.WidgetWrap):
         return self._innerwidget
 
     def load_inner_widget(self):
-        return urwid.Text(self.get_display_text())
+        return Text(self.get_display_text())
 
     def get_node(self):
         return self._node
@@ -379,7 +382,7 @@ class ParentNode(TreeNode):
         return len(self.get_child_keys())>0
 
 
-class TreeWalker(urwid.ListWalker):
+class TreeWalker(ListWalker):
     """ListWalker-compatible class for displaying TreeWidgets
 
     positions are TreeNodes."""
@@ -413,7 +416,7 @@ class TreeWalker(urwid.ListWalker):
             return target, target.get_node()
 
 
-class TreeListBox(urwid.ListBox):
+class TreeListBox(ListBox):
     """A ListBox with special handling for navigation and
     collapsing of TreeWidgets"""
 

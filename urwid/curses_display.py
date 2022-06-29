@@ -28,11 +28,10 @@ Curses-based UI implementation
 import curses
 import _curses
 
-from urwid import escape
+from . import escape
 
-from urwid.display_common import BaseScreen, RealTerminal, AttrSpec, \
-    UNPRINTABLE_TRANS_TABLE
-from urwid.compat import bytes, PYTHON3, text_type, xrange, ord2
+from . import display_common
+from .compat import bytes, PYTHON3, text_type, xrange, ord2
 
 KEY_RESIZE = 410 # curses.KEY_RESIZE (sometimes not defined)
 KEY_MOUSE = 409 # curses.KEY_MOUSE
@@ -58,7 +57,7 @@ _curses_colours = {
 }
 
 
-class Screen(BaseScreen, RealTerminal):
+class Screen(display_common.BaseScreen, display_common.RealTerminal):
     def __init__(self):
         super(Screen,self).__init__()
         self.curses_pairs = [
@@ -450,8 +449,8 @@ class Screen(BaseScreen, RealTerminal):
         if a is None:
             self.s.attrset(0)
             return
-        elif not isinstance(a, AttrSpec):
-            p = self._palette.get(a, (AttrSpec('default', 'default'),))
+        elif not isinstance(a, display_common.AttrSpec):
+            p = self._palette.get(a, (display_common.AttrSpec('default', 'default'),))
             a = p[0]
 
         if self.has_color:
@@ -506,7 +505,7 @@ class Screen(BaseScreen, RealTerminal):
             nr = 0
             for a, cs, seg in row:
                 if cs != 'U':
-                    seg = seg.translate(UNPRINTABLE_TRANS_TABLE)
+                    seg = seg.translate(display_common.UNPRINTABLE_TRANS_TABLE)
                     assert isinstance(seg, bytes)
 
                 if first or lasta != a:

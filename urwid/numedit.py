@@ -20,7 +20,7 @@
 # Urwid web site: http://excess.org/urwid/
 
 
-from urwid import Edit
+from .widget import Edit
 from decimal import Decimal
 import re
 

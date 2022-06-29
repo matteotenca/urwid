@@ -23,10 +23,9 @@ from __future__ import division, print_function
 
 import weakref
 
-from urwid.util import rle_len, rle_append_modify, rle_join_modify, rle_product, \
-    calc_width, calc_text_pos, apply_target_encoding, trim_text_attr_cs
-from urwid.text_layout import trim_line, LayoutSegment
-from urwid.compat import bytes
+from . import util
+from .text_layout import trim_line, LayoutSegment
+from .compat import bytes
 
 
 class CanvasCache(object):
@@ -334,7 +333,7 @@ class TextCanvas(Canvas):
             for t in text:
                 if type(t) != bytes:
                     raise CanvasError("Canvas text must be plain strings encoded in the screen's encoding", repr(text))
-                widths.append( calc_width( t, 0, len(t)) )
+                widths.append(util.calc_width(t, 0, len(t)))
         else:
             assert type(maxcol) == int
             widths = [maxcol] * len(text)
@@ -358,17 +357,17 @@ class TextCanvas(Canvas):
                 raise CanvasError("Canvas text is wider than the maxcol specified \n%r\n%r\n%r"%(maxcol,widths,text))
             if w < maxcol:
                 text[i] = text[i] + bytes().rjust(maxcol-w)
-            a_gap = len(text[i]) - rle_len( attr[i] )
+            a_gap = len(text[i]) - util.rle_len(attr[i])
             if a_gap < 0:
                 raise CanvasError("Attribute extends beyond text \n%r\n%r" % (text[i],attr[i]) )
             if a_gap:
-                rle_append_modify( attr[i], (None, a_gap))
+                util.rle_append_modify(attr[i], (None, a_gap))
 
-            cs_gap = len(text[i]) - rle_len( cs[i] )
+            cs_gap = len(text[i]) - util.rle_len(cs[i])
             if cs_gap < 0:
                 raise CanvasError("Character Set extends beyond text \n%r\n%r" % (text[i],cs[i]) )
             if cs_gap:
-                rle_append_modify( cs[i], (None, cs_gap))
+                util.rle_append_modify(cs[i], (None, cs_gap))
 
         self._attr = attr
         self._cs = cs
@@ -427,10 +426,10 @@ class TextCanvas(Canvas):
 
         for text, a_row, cs_row in text_attr_cs:
             if trim_left or cols < self._maxcol:
-                text, a_row, cs_row = trim_text_attr_cs(
+                text, a_row, cs_row = util.trim_text_attr_cs(
                     text, a_row, cs_row, trim_left,
                     trim_left + cols)
-            attr_cs = rle_product(a_row, cs_row)
+            attr_cs = util.rle_product(a_row, cs_row)
             i = 0
             row = []
             for (a, cs), run in attr_cs:
@@ -492,9 +491,9 @@ class SolidCanvas(Canvas):
     """
     def __init__(self, fill_char, cols, rows):
         Canvas.__init__(self)
-        end, col = calc_text_pos(fill_char, 0, len(fill_char), 1)
+        end, col = util.calc_text_pos(fill_char, 0, len(fill_char), 1)
         assert col == 1, "Invalid fill_char: %r" % fill_char
-        self._text, cs = apply_target_encoding(fill_char[:end])
+        self._text, cs = util.apply_target_encoding(fill_char[:end])
         self._cs = cs[0][0]
         self.size = cols, rows
         self.cursor = None
@@ -1264,23 +1263,23 @@ def apply_text_layout(text, attr, ls, maxcol):
             """
             if start_offs == end_offs:
                 [(at,run)] = arange(start_offs,end_offs)
-                rle_append_modify( linea, ( at, destw ))
+                util.rle_append_modify(linea, (at, destw))
                 return
             if destw == end_offs-start_offs:
                 for at, run in arange(start_offs,end_offs):
-                    rle_append_modify( linea, ( at, run ))
+                    util.rle_append_modify(linea, (at, run))
                 return
             # encoded version has different width
             o = start_offs
             for at, run in arange(start_offs, end_offs):
                 if o+run == end_offs:
-                    rle_append_modify( linea, ( at, destw ))
+                    util.rle_append_modify(linea, (at, destw))
                     return
                 tseg = text[o:o+run]
-                tseg, cs = apply_target_encoding( tseg )
-                segw = rle_len(cs)
+                tseg, cs = util.apply_target_encoding(tseg)
+                segw = util.rle_len(cs)
 
-                rle_append_modify( linea, ( at, segw ))
+                util.rle_append_modify(linea, (at, segw))
                 o += run
                 destw -= segw
 
@@ -1289,16 +1288,16 @@ def apply_text_layout(text, attr, ls, maxcol):
             #if seg is None: assert 0, ls
             s = LayoutSegment(seg)
             if s.end:
-                tseg, cs = apply_target_encoding(
+                tseg, cs = util.apply_target_encoding(
                     text[s.offs:s.end])
                 line.append(tseg)
-                attrrange(s.offs, s.end, rle_len(cs))
-                rle_join_modify( linec, cs )
+                attrrange(s.offs, s.end, util.rle_len(cs))
+                util.rle_join_modify(linec, cs)
             elif s.text:
-                tseg, cs = apply_target_encoding( s.text )
+                tseg, cs = util.apply_target_encoding(s.text)
                 line.append(tseg)
                 attrrange( s.offs, s.offs, len(tseg) )
-                rle_join_modify( linec, cs )
+                util.rle_join_modify(linec, cs)
             elif s.offs:
                 if s.sc:
                     line.append(bytes().rjust(s.sc))
